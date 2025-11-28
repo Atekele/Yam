@@ -1,0 +1,566 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>Stok ve Ürün Güncelleme</title>
+  <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1">
+  <link href="css/frame.css" media="screen" rel="stylesheet" type="text/css" />
+  <link href="css/controls.css" media="screen" rel="stylesheet" type="text/css" />
+  <link href="css/custom.css" media="screen" rel="stylesheet" type="text/css" />
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <style>
+    .menu { background-color: #7098e2; }
+    
+    /* 1. GRİD GÖRÜNÜM STİLLERİ */
+    .image-container {
+      width: 320px; 
+      height: auto; 
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 15px;
+      padding: 15px;
+      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
+      background-color: #fff;
+      border-radius: 8px;
+    }
+    .image-container img {
+      width: 100%;
+      height: 180px; 
+      object-fit: contain; 
+      margin-bottom: 15px;
+    }
+    .image-grid { display: flex; flex-wrap: wrap; justify-content: center; }
+
+    /* 2. LİSTE GÖRÜNÜMÜ STİLLERİ */
+    .list-view {
+        width: 95%; 
+        flex-direction: row; 
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 20px;
+        margin-bottom: 8px;
+        border: 1px solid #ddd;
+        box-shadow: none;
+    }
+    .list-view .list-image {
+        width: 80px; 
+        height: 80px;
+        object-fit: contain;
+        margin-right: 15px;
+        cursor: pointer; 
+        border: 1px solid #eee;
+    }
+    .list-view .product-info {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column; 
+        min-width: 200px;
+        max-width: 300px;
+    }
+    .list-view .adjust-controls {
+        display: flex;
+        flex-direction: row; 
+        gap: 15px;
+        align-items: center;
+        min-width: 650px; 
+    }
+    .list-view .price-group, .list-view .adjust-group, .list-view .image-update-group {
+        border: none;
+        padding: 0;
+        margin: 0;
+    }
+    .list-view .image-update-group input[type="file"] {
+        width: 130px; 
+    }
+    
+    /* Modal (Resim Büyütme Penceresi) Stilleri */
+    .modal {
+        display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.9);
+    }
+    .modal-content {
+        margin: auto; display: block; width: 80%; max-width: 700px; max-height: 80%; object-fit: contain; transform: translateY(50%); margin-top: 50px;
+    }
+    .close-button {
+        position: fixed; top: 15px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; transition: 0.3s; cursor: pointer;
+    }
+
+
+    /* MOBİL UYUMLULUK KURALLARI */
+    @media (max-width: 850px) {
+        .image-grid { flex-direction: column; align-items: center; }
+        .image-container { width: 95%; margin: 10px 0; }
+        .list-view { flex-direction: column; align-items: flex-start; padding: 15px; }
+        .list-view .list-image { margin: 10px 0; }
+        .list-view .product-info { width: 100%; margin-bottom: 10px; }
+        
+        /* 🔥 MENÜ DÜZELTMESİ 🔥 */
+        .menu-items { 
+            display: none; /* Varsayılan olarak gizli */
+            flex-direction: column; 
+            width: 100%;
+            position: absolute;
+            top: 50px; 
+            left: 0;
+            background-color: #7098e2;
+            z-index: 50; /* Diğer her şeyin üstünde */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            padding-bottom: 10px;
+        }
+        .menu-items.active {
+            display: flex; /* Active sınıfı varsa göster */
+        }
+        .menu-items a, .menu-items button {
+            width: 100%;
+            text-align: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #5a7ca8;
+        }
+        
+        .list-view .adjust-controls {
+            flex-direction: column; 
+            gap: 10px;
+            min-width: 100%;
+            width: 100%;
+        }
+        .list-view .price-group, .list-view .adjust-group, .list-view .image-update-group {
+            width: 100%;
+        }
+    }
+  </style>
+</head>
+
+<body>
+  
+  <div class="menu">
+    <div class="menu-table flex-row-space-between">
+      <div class="logo flex-row-center"><a href="index.html">MSES</a></div>
+      
+      <a class="menu-button" tabindex="0" href="javascript:void(0)">
+        <img src="img/menu.png">
+      </a>
+      
+      <div class="menu-items flex-row-center flex-item">
+        <a href="index.html" class="menu-index">Ana Panel</a>
+        <a href="ProductUpdate.html" class="menu-calender" style="font-weight: 700;">Stok Takip</a>
+        <a href="NewProduct.html" class="menu-aboutus">+ Yeni Ürün</a>
+        <button id="signOutButton" class="menu-help">Sign Out</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="imageModal" class="modal" onclick="document.getElementById('imageModal').style.display = 'none'">
+    <span class="close-button" onclick="event.stopPropagation(); document.getElementById('imageModal').style.display = 'none'">
+      &times;
+    </span>
+    <img class="modal-content" id="modalImage" onclick="event.stopPropagation()">
+  </div>
+
+
+  <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-top: 20px;">
+    <h1>Mevcut Ürün Stokları ve Güncelleme</h1>
+    <a href="NewProduct.html" style="text-decoration: none;">
+      <button style="background-color: #4CAF50; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 16px;">
+        + Hızlı Yeni Ürün
+      </button>
+    </a>
+  </div>
+
+  <p id="uploadStatus" style="color: blue; font-weight: bold; margin-bottom: 15px;"></p>
+
+  <div id="filterContainer">
+    <h3>Filtrele</h3>
+    <label for="filterBrand">Marka:</label>
+    <select id="filterBrand"> <option value="">Tümü</option> </select>
+    
+    <label for="filterModel" style="margin-left: 15px;">Model:</label>
+    <select id="filterModel"> <option value="">Tümü</option> </select>
+  </div>
+  
+  <div style="margin: 15px 20px; display: flex; gap: 10px;">
+    <button onclick="setViewMode('grid')" style="padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px;">
+        🔍 Izgara Görünümü (Grid)
+    </button>
+    <button onclick="setViewMode('list')" style="padding: 8px 15px; background-color: #6c757d; color: white; border: none; border-radius: 4px;">
+        📋 Liste Görünümü (Details)
+    </button>
+  </div>
+  
+  <div id="stockSummary">
+    <h3>Seçili Ürünlerin Stok Özeti</h3>
+    <p>Filtreleme uygulandıktan sonra özet burada görünür.</p>
+  </div>
+
+  <div id="userProducts" class="image-grid"></div> 
+  
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getDatabase, ref as dbRef, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    // Firebase yapılandırması (Aynı kalır)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBSCuSjLtRxCicBpiYE4zV_CQ6iF23CMos",
+      authDomain: "ceit133-mses.firebaseapp.com",
+      databaseURL: "https://ceit133-mses-default-rtdb.firebaseio.com",
+      projectId: "ceit133-mses",
+      storageBucket: "ceit133-mses.appspot.com",
+      messagingSenderId: "803859950218",
+      appId: "1:803859950218:web:48b897035bb041d1799b73",
+      measurementId: "G-09BSCKLQ2Y"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const database = getDatabase(app);
+    const storage = getStorage(app);
+
+    const userProducts = document.getElementById('userProducts');
+    const uploadStatus = document.getElementById('uploadStatus');
+    const filterBrand = document.getElementById('filterBrand');
+    const filterModel = document.getElementById('filterModel');
+    const signOutButton = document.getElementById('signOutButton');
+    
+    // 🔥 MOBİL MENÜ İÇİN EKLEME 🔥
+    const menuButton = document.querySelector('.menu-button');
+    const menuItems = document.querySelector('.menu-items');
+
+    menuButton.addEventListener('click', () => {
+        menuItems.classList.toggle('active');
+    });
+
+    let allProductsData = []; 
+    let currentUser = null;
+    let currentViewMode = 'grid'; 
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            currentUser = user;
+            loadUserProducts(user.uid);
+        } else {
+            alert('Bu sayfayı kullanmak için giriş yapmalısınız.');
+            window.location.href = './login.html';
+        }
+    });
+
+    signOutButton.addEventListener('click', () => {
+        signOut(auth).then(() => {
+            alert('Oturum başarıyla kapatıldı!');
+            window.location.href = './index.html';
+        });
+    });
+
+    window.setViewMode = function(mode) {
+        if (currentViewMode !== mode) {
+            currentViewMode = mode;
+            userProducts.className = (mode === 'list') ? 'image-grid list-view-container' : 'image-grid';
+            applyFilters(); 
+        }
+    }
+
+
+    function loadUserProducts(uid) {
+        const productsRef = dbRef(database, `products`);
+
+        onValue(productsRef, (snapshot) => {
+            allProductsData = [];
+            const uniqueBrands = new Set();
+            const modelsByBrand = {};
+
+            snapshot.forEach((childSnapshot) => {
+                const product = childSnapshot.val();
+                product.key = childSnapshot.key;
+                allProductsData.push(product);
+                
+                if (product.brand) {
+                    uniqueBrands.add(product.brand);
+                    if (!modelsByBrand[product.brand]) modelsByBrand[product.brand] = new Set();
+                    if (product.model) modelsByBrand[product.brand].add(product.model);
+                }
+            });
+            
+            populateFilterSelectors(uniqueBrands, modelsByBrand);
+            applyFilters();
+        });
+    }
+
+    function populateFilterSelectors(uniqueBrands, modelsByBrand) {
+        const currentBrand = filterBrand.value;
+        filterBrand.innerHTML = '<option value="">Tümü</option>';
+        uniqueBrands.forEach(brand => {
+            const option = document.createElement('option');
+            option.value = brand;
+            option.textContent = brand;
+            filterBrand.appendChild(option);
+        });
+        filterBrand.value = currentBrand;
+        
+        filterBrand.onchange = () => {
+            const selectedBrand = filterBrand.value;
+            const currentModel = filterModel.value;
+            
+            filterModel.innerHTML = '<option value="">Tümü</option>';
+
+            if (selectedBrand && modelsByBrand[selectedBrand]) {
+                modelsByBrand[selectedBrand].forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model;
+                    option.textContent = model;
+                    filterModel.appendChild(option);
+                });
+            }
+            filterModel.value = currentModel;
+            applyFilters();
+        };
+        
+        filterModel.onchange = () => applyFilters();
+
+        if (filterBrand.value) filterBrand.dispatchEvent(new Event('change')); 
+    }
+
+    function applyFilters() {
+        userProducts.innerHTML = '';
+        const selectedBrand = filterBrand.value;
+        const selectedModel = filterModel.value;
+
+        const filteredProducts = allProductsData.filter(product => {
+            const matchesBrand = !selectedBrand || product.brand === selectedBrand;
+            const matchesModel = !selectedModel || product.model === selectedModel;
+            return matchesBrand && matchesModel;
+        });
+
+        filteredProducts.forEach(product => {
+            displayProductCard(product, product.key, currentViewMode);
+        });
+        
+        generateSummary(filteredProducts);
+    }
+    
+    function generateSummary(products) {
+        const summaryDiv = document.getElementById('stockSummary');
+        let totalStock = 0;
+        const colorBreakdown = {}; 
+        const brandBreakdown = {}; 
+        const modelBreakdown = {}; 
+
+        products.forEach(product => {
+            const quantity = product.stock_quantity;
+            totalStock += quantity;
+            
+            const color = product.color || 'Bilinmeyen Renk';
+            if (!colorBreakdown[color]) colorBreakdown[color] = 0;
+            colorBreakdown[color] += quantity;
+
+            const brand = product.brand || 'Bilinmeyen Marka';
+            if (!brandBreakdown[brand]) brandBreakdown[brand] = 0;
+            brandBreakdown[brand] += quantity;
+
+            const model = product.model || 'Bilinmeyen Model';
+            if (!modelBreakdown[model]) modelBreakdown[model] = 0;
+            modelBreakdown[model] += quantity;
+        });
+        
+        let brandList = '';
+        for (const brand in brandBreakdown) brandList += `<li>**${brand}**: ${brandBreakdown[brand]} adet</li>`;
+        let modelList = '';
+        for (const model in modelBreakdown) modelList += `<li>**${model}**: ${modelBreakdown[model]} adet</li>`;
+        let colorList = '';
+        for (const color in colorBreakdown) colorList += `<li>**${color}**: ${colorBreakdown[color]} adet</li>`;
+
+        summaryDiv.innerHTML = `
+            <h3>Seçili Ürünlerin Stok Özeti (${products.length} çeşit ürün)</h3>
+            <p style="font-size: 1.1em;"><strong>Genel Toplam Stok Adedi: ${totalStock}</strong></p>
+            
+            <h4 style="margin-top: 15px;">Marka Dağılımı:</h4>
+            <ul style="list-style-type: disc; padding-left: 20px;">${brandList}</ul>
+
+            <h4 style="margin-top: 15px;">Model Dağılımı:</h4>
+            <ul style="list-style-type: disc; padding-left: 20px;">${modelList}</ul>
+
+            <h4 style="margin-top: 15px;">Renklere Göre Dağılım:</h4>
+            <ul style="list-style-type: disc; padding-left: 20px;">${colorList}</ul>
+        `;
+        
+        uploadStatus.textContent = `${products.length} adet ürün listeleniyor.`;
+    }
+
+    // Resmi Büyüten Modal Fonksiyonu
+    window.openImageModal = function(imageUrl) {
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
+
+        modal.style.display = "block";
+        modalImg.src = imageUrl;
+    }
+
+
+    // Ürün kartlarını gösterme fonksiyonu (MODE GÖRE VE KONTROLLERLE)
+    function displayProductCard(product, key, mode) {
+        const card = document.createElement('div');
+        
+        card.className = (mode === 'list') ? 'image-container list-view' : 'image-container';
+
+        let stockColor;
+        if (product.stock_quantity > 10) stockColor = 'green';
+        else if (product.stock_quantity > 0) stockColor = 'orange';
+        else stockColor = 'red';
+
+        const buyPrice = product.buy_price ? product.buy_price.toFixed(2) : '0.00';
+        const sellPrice = product.sell_price ? product.sell_price.toFixed(2) : '0.00';
+        
+        // TÜM KONTROLLERİN HTML YAPISI (Hem Grid hem Listede kullanılacak)
+        const allControlsHTML = `
+            <div class="price-group">
+                <div class="price-input-row">
+                    <label>Alış (₺):</label>
+                    <input type="number" id="buyPriceInput-${key}" step="0.01" value="${buyPrice}" />
+                </div>
+                <div class="price-input-row">
+                    <label>Satış (₺):</label>
+                    <input type="number" id="sellPriceInput-${key}" step="0.01" value="${sellPrice}" />
+                </div>
+                <button onclick="updatePrices('${key}')" style="background-color: #28a745; color: white; border: none; padding: 8px; margin-top: 5px; border-radius: 4px;">Fiyatları Güncelle</button>
+            </div>
+            
+            <div class="adjust-group">
+                <button onclick="performStockAdjustment('${key}', 'decrease')" class="adjust-buttons" style="background-color: #F44336; color: white;">-</button>
+                <input type="number" id="stockAdjustmentInput-${key}" class="stock-input" value="1" min="1">
+                <button onclick="performStockAdjustment('${key}', 'increase')" class="adjust-buttons" style="background-color: #4CAF50; color: white;">+</button>
+            </div>
+            
+            <div class="image-update-group">
+                <input type="file" id="imageUpload-${key}" accept="image/*" onchange="updateImage('${key}')">
+                <small style="color: gray;">Yeni görsel seçin</small>
+            </div>
+        `;
+        
+        
+        if (mode === 'list') {
+            const imageSource = product.image_url || 'placeholder.jpg';
+            
+            // LİSTE GÖRÜNÜMÜ: Tüm kontrolleri yan yana getirir
+            card.innerHTML = `
+                <img src="${imageSource}" class="list-image" alt="${product.name}" onclick="openImageModal('${imageSource}')"> 
+                
+                <div class="product-info">
+                    <p style="font-weight: bold; margin: 0;">${product.name} (${product.sku})</p>
+                    <p style="color: ${stockColor}; margin: 0;">STOK: <strong id="stockDisplay-${key}">${product.stock_quantity}</strong></p>
+                    <p style="color: gray; margin: 0;">Fiyat: ${sellPrice} ₺</p>
+                </div>
+                
+                <div class="adjust-controls">
+                    ${allControlsHTML}
+                </div>
+            `;
+        } else {
+            // GRİD (DETAYLI) GÖRÜNÜMÜ: Dikey düzen
+            card.innerHTML = `
+                <img src="${product.image_url || 'placeholder.jpg'}" alt="${product.name}">
+                <p><strong>${product.name}</strong></p>
+                <p>SKU: ${product.sku}</p>
+                <p style="font-size: 1.2em; color: ${stockColor}">
+                    Stok Adedi: <strong id="stockDisplay-${key}">${product.stock_quantity}</strong>
+                </p>
+                ${allControlsHTML}
+            `;
+        }
+
+        userProducts.appendChild(card);
+    }
+    
+    // FİYAT GÜNCELLEME İŞLEVİ
+    window.updatePrices = function(productKey) {
+        const buyPriceInput = document.getElementById(`buyPriceInput-${productKey}`);
+        const sellPriceInput = document.getElementById(`sellPriceInput-${productKey}`);
+        
+        const newBuyPrice = parseFloat(buyPriceInput.value);
+        const newSellPrice = parseFloat(sellPriceInput.value);
+
+        if (isNaN(newBuyPrice) || isNaN(newSellPrice) || newBuyPrice < 0 || newSellPrice < 0) {
+            alert("Lütfen geçerli pozitif fiyatlar girin.");
+            return;
+        }
+
+        const productRef = dbRef(database, `products/${productKey}`);
+
+        update(productRef, {
+            buy_price: newBuyPrice,
+            sell_price: newSellPrice
+        })
+        .then(() => {
+            uploadStatus.textContent = `Fiyatlar başarıyla güncellendi! Alış: ${newBuyPrice.toFixed(2)}₺, Satış: ${newSellPrice.toFixed(2)}₺`;
+        })
+        .catch((error) => {
+            uploadStatus.textContent = "Fiyat güncellenirken hata oluştu: " + error.message;
+        });
+    }
+
+    window.performStockAdjustment = function(productKey, action) {
+        const inputElement = document.getElementById(`stockAdjustmentInput-${productKey}`);
+        const quantity = parseInt(inputElement.value);
+        const currentStock = parseInt(document.getElementById(`stockDisplay-${productKey}`).textContent);
+
+        if (isNaN(quantity) || quantity <= 0) {
+            alert("Lütfen geçerli bir adet girin.");
+            return;
+        }
+
+        let changeAmount = quantity;
+        if (action === 'decrease') {
+            changeAmount *= -1;
+        }
+        
+        const newQuantity = currentStock + changeAmount;
+        
+        if (newQuantity < 0) { 
+            alert("Stok adedi eksiye düşürülemez."); 
+            return; 
+        }
+
+        const productRef = dbRef(database, `products/${productKey}`);
+
+        update(productRef, {
+            stock_quantity: newQuantity
+        })
+        .then(() => {
+            uploadStatus.textContent = `Stok başarıyla güncellendi! Yeni Miktar: ${newQuantity}`;
+        })
+        .catch((error) => {
+            uploadStatus.textContent = "Stok güncellenirken hata oluştu: " + error.message;
+        });
+    }
+
+    window.updateImage = function(productKey) {
+        const fileInput = document.getElementById(`imageUpload-${productKey}`);
+        const file = fileInput.files[0];
+
+        if (!file) {
+            alert('Lütfen bir resim dosyası seçin.');
+            return;
+        }
+
+        uploadStatus.textContent = 'Yeni görsel yükleniyor...';
+        
+        const filePath = `products_images/${currentUser.uid}/${productKey}_${file.name}`;
+        const storageRef_ = storageRef(storage, filePath);
+
+        uploadBytes(storageRef_, file)
+            .then((snapshot) => getDownloadURL(snapshot.ref))
+            .then((url) => {
+                const productRef = dbRef(database, `products/${productKey}`);
+                return update(productRef, {
+                    image_url: url,
+                    storage_path: filePath 
+                });
+            })
+            .then(() => {
+                uploadStatus.textContent = 'Görsel başarıyla güncellendi!';
+            })
+            .catch((error) => {
+                uploadStatus.textContent = `Görsel yüklenirken hata oluştu: ${error.message}`;
+            });
+    }
+  </script>
+</body>
+</html>
