@@ -462,106 +462,7 @@
     }
   </script>
 </body>
-</html>
-        #productForm, .input-group {
-            display: block; 
-        }
-        .input-group {
-            padding: 5px 0;
-            border-bottom: 1px solid #eee;
-        }
-        .input-group label {
-            display: block;
-            margin-bottom: 5px;
-            width: auto;
-        }
-        .input-group select, .input-group input:not(.new-input) {
-            width: 100%;
-            max-width: none;
-        }
-        .input-group input.new-input {
-            width: calc(100% - 70px); /* Buton için yer bırak */
-        }
-        .input-group button {
-            margin-left: 5px;
-        }
-
-        /* Menü Düzeltmesi */
-        .menu-items { 
-            display: none; 
-            flex-direction: column; 
-            width: 100%;
-            position: absolute;
-            top: 50px; 
-            left: 0;
-            background-color: #7098e2;
-            z-index: 50; 
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            padding-bottom: 10px;
-        }
-        .menu-items.active {
-            display: flex; 
-        }
-        .menu-items a, .menu-items button {
-            width: 100%;
-            text-align: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #5a7ca8;
-        }
-    }
-  </style>
-</head>
-
-<body>
-  
-  <div class="menu">
-    <div class="menu-table flex-row-space-between">
-      <div class="logo flex-row-center"><a href="index.html">MSES</a></div>
-      
-      <a class="menu-button" tabindex="0" href="javascript:void(0)">
-        <img src="img/menu.png">
-      </a>
-      
-      <div class="menu-items flex-row-center flex-item">
-        <a href="index.html" class="menu-index">Ana Panel</a>
-        <a href="ProductUpdate.html" class="menu-calender">Stok Takip</a>
-        <a href="NewProduct.html" class="menu-aboutus" style="font-weight: 700;">+ Yeni Ürün</a>
-        <button id="signOutButton" class="menu-help">Sign Out</button>
-      </div>
-    </div>
-  </div>
-
-  <h1>Yeni Bisiklet Ürünü Ekle</h1>
-  <p id="uploadStatus" style="color: blue; font-weight: bold;"></p>
-
-  <form id="productForm">
-    
-    <div class="input-group">
-        <label for="brandSelect">Marka:</label>
-        <select id="brandSelect" required></select>
-        <input type="text" id="brandInput" class="new-input" placeholder="Yeni Marka Adı" style="display:none;">
-        <button type="button" id="addNewBrandBtn" style="display:none;">Ekle</button>
-    </div>
-
-    <div class="input-group">
-        <label for="modelSelect">Model Adı:</label>
-        <select id="modelSelect" required></select>
-        <input type="text" id="modelInput" class="new-input" placeholder="Yeni Model Adı" style="display:none;">
-        <button type="button" id="addNewModelBtn" style="display:none;">Ekle</button>
-    </div>
-    
-    <div class="input-group">
-        <label for="wheel_size">Jant Boyutu:</label>
-        <select id="wheel_size" required>
-            <option value="">Seçin...</option>
-            <option value="12">12</option>
-            <option value="14">14</option>
-            <option value="15">15</option>
-            <option value="16">16</option>
-            <option value="20">20</option>
-            <option value="24">24</option>
-            <option value="26">26</option>
-            <option value="27.5">27.5</option>
+</html>    ="27.5">27.5</option>
             <option value="28">28</option>
             <option value="29">29</option>
         </select>
@@ -666,73 +567,6 @@
             alert('Oturum başarıyla kapatıldı!');
             window.location.href = './index.html';
         });
-    });
-
-    // =======================================================
-    // DİNAMİK SEÇİCİLERİ DOLDURMA İŞLEVİ
-    // =======================================================
-    function populateSelectors() {
-        const productsRef = dbRef(database, `products`);
-        
-        onValue(productsRef, (snapshot) => {
-            const uniqueBrands = new Set();
-            uniqueColors = new Set(); 
-            modelsByBrand = {};
-            
-            snapshot.forEach((childSnapshot) => {
-                const product = childSnapshot.val();
-                
-                if (product.brand) {
-                    uniqueBrands.add(product.brand);
-                    if (!modelsByBrand[product.brand]) modelsByBrand[product.brand] = new Set();
-                    if (product.model) modelsByBrand[product.brand].add(product.model);
-                }
-                if (product.color) uniqueColors.add(product.color);
-            });
-
-            fillSelect(brandSelect, uniqueBrands, 'Marka Seçiniz');
-            fillSelect(colorSelect, uniqueColors, 'Renk Seçiniz');
-            
-            if (brandSelect.value && brandSelect.value !== 'YENI_EKLE') {
-                updateModelSelect(brandSelect.value);
-            }
-
-        }, {
-            onlyOnce: false
-        });
-    }
-
-    function fillSelect(selectElement, itemsSet, defaultText) {
-        const currentVal = selectElement.value;
-        selectElement.innerHTML = '';
-        
-        const defaultOption = document.createElement('option');
-        defaultOption.value = '';
-        defaultOption.textContent = defaultText;
-        selectElement.appendChild(defaultOption);
-
-        const newOption = document.createElement('option');
-        newOption.value = 'YENI_EKLE';
-        newOption.textContent = '--- Yeni Ekle ---';
-        selectElement.appendChild(newOption);
-        
-        itemsSet.forEach(item => {
-            const option = document.createElement('option');
-            option.value = item;
-            option.textContent = item;
-            selectElement.appendChild(option);
-        });
-
-        selectElement.value = currentVal; 
-    }
-
-    function updateModelSelect(selectedBrand) {
-        if (modelsByBrand[selectedBrand]) {
-            fillSelect(modelSelect, modelsByBrand[selectedBrand], 'Model Seçiniz');
-        } else {
-            fillSelect(modelSelect, new Set(), 'Model Seçiniz');
-        }
-    }
 
 
     // =======================================================
@@ -892,6 +726,7 @@
 </body>
 
 </html>
+
 
 
 
