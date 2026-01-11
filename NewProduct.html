@@ -1,57 +1,171 @@
 <!doctype html>
 <html>
-
 <head>
-  <title>Yeni Bisiklet Ürünü Ekle</title>
+  <title>Carraro Stok Girişi | MSES</title>
   <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1">
-  <link href="css/frame.css" media="screen" rel="stylesheet" type="text/css" />
-  <link href="css/controls.css" media="screen" rel="stylesheet" type="text/css" />
-  <link href="css/custom.css" media="screen" rel="stylesheet" type="text/css" />
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <link href="css/frame.css" rel="stylesheet" type="text/css" />
   <style>
-    .menu { background-color: #7098e2; }
-    
-    /* Input Grupları İçin Temel Ayarlar */
-    .input-group { 
-        display: flex; 
-        align-items: center; 
-        gap: 10px; 
-        margin-bottom: 15px; 
-    }
-    .input-group label { width: 100px; }
-    .input-group select, .input-group input[type="text"], .input-group input[type="number"] {
-        padding: 8px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        box-sizing: border-box;
-        max-width: 180px;
-    }
-    .input-group input[type="text"].new-input {
-        max-width: 150px;
-    }
-    .input-group button { min-width: 60px; }
-    
-    /* Mobil Menü Stilleri */
-    @media (max-width: 850px) {
-        /* Form elemanlarını alt alta diz */
-        #productForm, .input-group {
-            display: block; 
+    .menu { background-color: #7098e2; padding: 10px; color: white; }
+    .container { padding: 20px; max-width: 600px; margin: auto; }
+    .input-group { margin-bottom: 15px; display: flex; flex-direction: column; }
+    .input-group label { font-weight: bold; margin-bottom: 5px; color: #333; }
+    .input-group select, .input-group input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; }
+    .row { display: flex; gap: 10px; }
+    .row .input-group { flex: 1; }
+    .btn-submit { background-color: #28a745; color: white; padding: 15px; border: none; border-radius: 6px; width: 100%; font-size: 18px; cursor: pointer; font-weight: bold; }
+    #status { padding: 10px; margin-bottom: 10px; border-radius: 5px; display: none; }
+    .new-entry { display: flex; gap: 5px; margin-top: 5px; }
+    .new-entry input { flex: 1; }
+    .btn-add { background: #007bff; color: white; border: none; padding: 5px 10px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+  <div class="menu">
+    <strong>MSES STOK SİSTEMİ</strong> | <a href="ProductUpdate.html" style="color:white">Stoktan Düş/Ekle</a>
+  </div>
+
+  <div class="container">
+    <h2>Carraro Ürün Kaydı</h2>
+    <div id="status"></div>
+
+    <form id="productForm">
+      <div class="input-group">
+        <label>Model Serisi:</label>
+        <select id="modelSelect" required>
+          <option value="">Seçiniz...</option>
+          <optgroup label="CARRARO DAĞ">
+            <option value="Daytona 911">Daytona 911</option>
+            <option value="Daytona 909">Daytona 909</option>
+            <option value="Daytona 910">Daytona 910</option>
+            <option value="Force 970">Force 970</option>
+            <option value="Force 900">Force 900</option>
+            <option value="Force 700">Force 700</option>
+            <option value="CRX 900">CRX 900</option>
+            <option value="CRX 800">CRX 800</option>
+          </optgroup>
+          <optgroup label="CARRARO ŞEHİR/YOL">
+            <option value="Speed 260">Speed 260</option>
+            <option value="Speed 240">Speed 240</option>
+            <option value="Sportive 722">Sportive 722</option>
+          </optgroup>
+          <option value="YENI">-- Listede Yok (Yeni Ekle) --</option>
+        </select>
+        <div id="newModelArea" style="display:none;" class="new-entry">
+          <input type="text" id="newModelInput" placeholder="Model adını yazın">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="input-group">
+          <label>Jant:</label>
+          <select id="wheelSelect">
+            <option value="29">29"</option>
+            <option value="27.5">27.5"</option>
+            <option value="26">26"</option>
+            <option value="24">24"</option>
+            <option value="20">20"</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>Kadro (Örn: 520H):</label>
+          <input type="text" id="frameInput" placeholder="480H, 520H vb.">
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label>Renk (Tam Tanım):</label>
+        <input type="text" id="colorInput" placeholder="Örn: Mat Siyah-Beyaz-Turuncu" required>
+      </div>
+
+      <div class="row">
+        <div class="input-group">
+          <label>Stok Adedi:</label>
+          <input type="number" id="qtyInput" value="1" min="1">
+        </div>
+        <div class="input-group">
+          <label>Satış Fiyatı (₺):</label>
+          <input type="number" id="priceInput" placeholder="0.00">
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label>Fotoğraf Çek (Opsiyonel):</label>
+        <input type="file" id="imageInput" accept="image/*" capture="camera">
+      </div>
+
+      <button type="submit" class="btn-submit">SİSTEME EKLE</button>
+    </form>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBSCuSjLtRxCicBpiYE4zV_CQ6iF23CMos",
+      authDomain: "ceit133-mses.firebaseapp.com",
+      databaseURL: "https://ceit133-mses-default-rtdb.firebaseio.com",
+      projectId: "ceit133-mses",
+      storageBucket: "ceit133-mses.appspot.com",
+      appId: "1:803859950218:web:48b897035bb041d1799b73"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const storage = getStorage(app);
+
+    const modelSelect = document.getElementById('modelSelect');
+    const newModelArea = document.getElementById('newModelArea');
+
+    modelSelect.onchange = () => {
+      newModelArea.style.display = (modelSelect.value === 'YENI') ? 'flex' : 'none';
+    };
+
+    document.getElementById('productForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const status = document.getElementById('status');
+      status.style.display = 'block';
+      status.style.background = '#eee';
+      status.innerText = "İşleniyor...";
+
+      const model = modelSelect.value === 'YENI' ? document.getElementById('newModelInput').value : modelSelect.value;
+      const file = document.getElementById('imageInput').files[0];
+      let imgUrl = "";
+
+      try {
+        if(file) {
+          const storagePath = `products/${Date.now()}_${file.name}`;
+          const snap = await uploadBytes(sRef(storage, storagePath), file);
+          imgUrl = await getDownloadURL(snap.ref);
         }
-        .input-group {
-            padding: 5px 0;
-            border-bottom: 1px solid #eee;
-        }
-        .input-group label {
-            display: block;
-            margin-bottom: 5px;
-            width: auto;
-        }
-        .input-group select, .input-group input:not(.new-input) {
-            width: 100%;
-            max-width: none;
-        }
-        .input-group input.new-input {
-            width: calc(100% - 70px); /* Buton için yer bırak */
+
+        const newProduct = {
+          brand: "Carraro",
+          model: model,
+          wheel_size: document.getElementById('wheelSelect').value,
+          frame_size: document.getElementById('frameInput').value,
+          color: document.getElementById('colorInput').value,
+          stock_quantity: parseInt(document.getElementById('qtyInput').value),
+          sell_price: document.getElementById('priceInput').value,
+          image_url: imgUrl,
+          created_at: Date.now()
+        };
+
+        await push(ref(db, 'products'), newProduct);
+        status.style.background = '#d4edda';
+        status.innerText = "Ürün Başarıyla Kaydedildi!";
+        document.getElementById('productForm').reset();
+        newModelArea.style.display = 'none';
+      } catch (err) {
+        status.style.background = '#f8d7da';
+        status.innerText = "Hata: " + err.message;
+      }
+    };
+  </script>
+</body>
+</html>
         }
         .input-group button {
             margin-left: 5px;
@@ -463,4 +577,5 @@
   </script>
 </body>
 </html>        
+
 
